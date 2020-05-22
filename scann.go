@@ -6,7 +6,7 @@ import (
 	"os"
 	"bufio"
 	"strings"
-	//"strconv"
+	"strconv"
 	"os/exec"
 	"sync"	
 )
@@ -18,8 +18,8 @@ func main(){
 
 
 	var esperar sync.WaitGroup
-	var esperar2 sync.WaitGroup
-	ip := " "
+	
+	ip := "digital-studio.org"
 	puert := 0
 	puertos :=[]string{}
 	mas_usados :=[]string{"21", "22", "80", "443" , "445", "3389"}
@@ -58,17 +58,22 @@ func main(){
 		case "run":
 				if puert == 1 {
 						for x :=0; x<len(puertos);x++ {
-								direccion := ip + ":" + puertos[x]
+							esperar.Add(1)
+							go func(r int){
+								defer esperar.Done()
+								direccion := ip + ":" + puertos[r]
 								si, err := net.Dial("tcp", direccion )
 								if err ==nil {
 									fmt.Println(" ")
-									fmt.Println("[+]" + puertos[x] + " abierto")
+									fmt.Println("[+]" + puertos[r] + " abierto")
 									si.Close()
-							}else {
+								}else {
 									
-									continue
-							}	
+									return
+								}
+							}(x)	
 						}
+						esperar.Wait()
 
 				}//acaba el primer if
 				if puert == 0 {     //no olvodarme de cambair esto a un numero(eficiencia)
@@ -93,26 +98,25 @@ func main(){
 
 		case "todos":
 			for x :=0; x<=1024;x++ {
-				
-				esperar2.Add(1)
-				go func(j int){
-					
-					defer esperar2.Done()
-					num :=fmt.Sprintf(ip + ":%d",j)
-					
-					si3, err := net.Dial("tcp", num )
-					if err ==nil {
-						si3.Close()
-						fmt.Println("[+]" + num + " abierto")
-						
-					}else{
-						
-						return
-					}
-				}(x)
-			}
-			esperar2.Wait()
 
+				
+			
+				num := strconv.Itoa(x)
+				
+					
+				direccion := ip + ":" + num
+					
+				si3, err := net.Dial("tcp", direccion )
+				if err ==nil {
+					si3.Close()
+					fmt.Println("[+]" + num + " abierto")
+					
+				}else{
+						continue
+					}
+
+			}
+			
 
 		case "exit":
 			fmt.Println("[+]Volviendo a la normalidad...")
